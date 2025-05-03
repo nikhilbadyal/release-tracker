@@ -1,0 +1,7 @@
+services:
+  app:
+    build: .
+    volumes:
+      - ./downloads:/app/downloads
+    env_file:
+      - .env.empty

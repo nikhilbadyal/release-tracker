@@ -1,0 +1,26 @@
+name: Watch Releases
+
+on:
+  schedule:
+    - cron: "0 */1 * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-watcher:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4.2.2
+
+      - uses: oNaiPs/secrets-to-env-action@v1.5
+        with:
+          secrets: ${{ toJSON(secrets) }}
+
+      - name: Run Release Watcher
+        run: |
+          printenv | sed 's/=/="/; s/$/"/' > .env.empty
+          docker compose up --build --abort-on-container-exit

@@ -1,0 +1,38 @@
+watchers:
+  github:
+    type: github
+    config:
+      token: "${GH_TOKEN}"
+
+  gitlab:
+    type: gitlab
+    config:
+      token: "${GITLAB_TOKEN}"
+      base_url: "https://gitlab.com/api/v4"
+
+repos:
+  - name: "nikhilbadyal.github.io"
+    repo: "nikhilbadyal/nikhilbadyal.github.io"
+    watcher: github
+    config:
+      upload_assets: false
+
+
+  - name: "AuroraStore"
+    repo: "AuroraOSS/AuroraStore"
+    watcher: gitlab
+    config:
+      upload_assets: false
+
+
+persistence:
+  type: redis
+  config:
+    host: "redis"
+    port: 6379
+    db: 0
+
+notifier:
+  type: apprise
+  config:
+    url: "${APPRISE_URL}"

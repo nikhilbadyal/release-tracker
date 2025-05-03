@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    volumes:
+      - ./downloads:/app/downloads
+    depends_on:
+      - redis
+    env_file:
+      - .env.empty
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"

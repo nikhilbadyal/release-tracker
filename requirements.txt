@@ -1,0 +1,7 @@
+apprise
+beautifulsoup4
+boto3
+PyYAML
+redis
+requests
+tenacity
