@@ -13,7 +13,6 @@ class AppriseNotifier(Notifier):
         self.apprise = Apprise()
         self.apprise.add(config["url"])
 
-        # From my POV: Validate message format and fall back if unknown
         requested_format = str(config.get("format", NotifyFormat.TEXT)).lower()
         valid_formats = {
             "text": NotifyFormat.TEXT,
@@ -28,7 +27,6 @@ class AppriseNotifier(Notifier):
     def send(self, title: str, body: str, attachments: Sequence[Path] | None = None) -> bool:
         str_attachments = [str(path) for path in attachments] if attachments else None
 
-        # From my POV: Warn if attachments are not supported
         if str_attachments:
             for service in self.apprise.servers:  # type: ignore[attr-defined]
                 if not service.attachment_support:

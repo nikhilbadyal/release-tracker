@@ -62,6 +62,5 @@ def get_notifier(config: dict[str, Any]) -> Notifier:
         msg = f"Unsupported notifier type: {notifier_type}"
         raise ValueError(msg)
 
-    # Attach format preference to the notifier instance (e.g., "markdown", "html", "text")
     notifier.message_format = config.get("format", "text").lower()
     return notifier
