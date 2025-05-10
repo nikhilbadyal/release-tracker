@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from watcher.base import ReleaseInfo, Watcher
 
 
-def main() -> None:  # noqa: C901
+def main() -> None:  # noqa: C901,PLR0915,PLR0912
     config = load_config()
     repos = config["repos"]
     watchers_conf = config["watchers"]
@@ -48,17 +48,19 @@ def main() -> None:  # noqa: C901
             print(f"ℹ️  No releases found for {repo_id}")  # noqa: RUF001
             continue
 
-        last_tag = backend.get_last_release(repo_id)
-        if last_tag == release.tag and not os.getenv("FORCE_NOTIFY"):
+        last_tag = backend.get_last_release(watcher_key + "_" + repo_id)
+        force_notify = os.getenv("FORCE_NOTIFY")
+        if last_tag == release.tag and not force_notify:
             print(f"✅ Already up-to-date: {repo_id} @ {release.tag}")
             continue
+        if last_tag == release.tag:
+            print(
+                f"🔁 FORCE_NOTIFY is {force_notify} — re-notifying for {repo_id} @ {release.tag} (no version change)",
+            )
         else:
-            if last_tag == release.tag:
-                print(f"🔁 FORCE_NOTIFY is {os.getenv("FORCE_NOTIFY")} — re-notifying for {repo_id} @ {release.tag} (no version change)")
-            else:
-                print(f"🆕 New release detected for {repo_id}")
-                print(f"📦 Old: {last_tag}")
-                print(f"📦 New: {release.tag}")
+            print(f"🆕 New release detected for {repo_id}")
+            print(f"📦 Old: {last_tag}")
+            print(f"📦 New: {release.tag}")
 
         Path("downloads").mkdir(exist_ok=True)
 
@@ -88,7 +90,7 @@ def main() -> None:  # noqa: C901
             else:
                 print(f"📣 Notification sent for {repo_id} via {type(notifier).__name__}")
 
-        backend.set_last_release(repo_id, release.tag)
+        backend.set_last_release(watcher_key + "_" + repo_id, release.tag)
 
 
 if __name__ == "__main__":

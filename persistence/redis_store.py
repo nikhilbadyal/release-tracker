@@ -11,7 +11,7 @@ class RedisStore(PersistenceBackend):
         port: int = 6379,
         db: int = 0,
         password: str | None = None,
-        prefix: str = "github_release_tracker",
+        prefix: str = "release_tracker",
     ) -> None:
         self.redis = redis.Redis(
             host=host,
