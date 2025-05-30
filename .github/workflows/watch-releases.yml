@@ -2,8 +2,14 @@ name: Watch Releases
 
 on:
   schedule:
-    - cron: "0 */1 * * *"
+    - cron: "0 */1 * * *"  # Every hour
   workflow_dispatch:
+    inputs:
+      force_notify:
+        description: "Force notify even if release tag is same"
+        required: false
+        default: false
+        type: boolean
   push:
     branches:
       - main
@@ -19,6 +25,12 @@ jobs:
       - uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ toJSON(secrets) }}
+
+      - name: Set FORCE_NOTIFY env
+        run: |
+          if [[ "${{ github.event.inputs.force_notify }}" == "true" ]]; then
+            echo 'FORCE_NOTIFY=1' >> $GITHUB_ENV
+          fi
 
       - name: Run Release Watcher
         run: |
