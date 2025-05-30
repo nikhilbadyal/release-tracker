@@ -11,6 +11,7 @@ from persistence.redis_store import RedisStore
 from watcher.apkmirror import APKMirrorWatcher
 from watcher.apkpure import APKPureWatcher
 from watcher.base import Watcher
+from watcher.fdroid import FdroidWatcher
 from watcher.github import GitHubWatcher
 from watcher.gitlab import GitLabWatcher
 
@@ -24,6 +25,8 @@ def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:
         return APKMirrorWatcher(config=config)
     if watcher_type == "apkpure":
         return APKPureWatcher(user_agent=config.get("user_agent"))
+    if watcher_type == "fdroid":
+        return FdroidWatcher()
     msg = f"[ERROR] Watcher type '{watcher_type}' not supported"
     raise NotImplementedError(msg)
 

@@ -1,6 +1,7 @@
 apprise
 beautifulsoup4
 boto3
+lxml
 PyYAML
 redis
 requests

@@ -47,11 +47,11 @@ def notify_all(repo_id: str, release: "ReleaseInfo", notifiers: list[Notifier], 
             title = f"New Release: {repo_id}"
             success = notifier.send(title=title, body=body, attachments=attachments)
             if success:
-                print(f"  ✅ Notification sent via {type(notifier).__name__}")
+                print(f"✅ Notification sent via {type(notifier).__name__}")
             else:
-                print(f"  ❌ Notification failed via {type(notifier).__name__}")
+                print(f"❌ Notification failed via {type(notifier).__name__}")
         except Exception as e:
-            print(f"  ❌ Error rendering message or sending notification via {type(notifier).__name__}: {e}")
+            print(f"❌ Error rendering message or sending notification via {type(notifier).__name__}: {e}")
 
 
 class RepoProcessor:
