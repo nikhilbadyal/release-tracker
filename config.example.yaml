@@ -14,6 +14,29 @@ watchers:
     type: pypi
     config: {}
 
+  dockerhub:
+    type: dockerhub
+    config:
+      token: "${DOCKER_TOKEN}"  # Optional
+
+  npm:
+    type: npm
+    config:
+      registry_url: "https://registry.npmjs.org"  # Optional, defaults to npmjs
+
+  maven:
+    type: maven
+    config:
+      base_url: "https://search.maven.org"  # Optional
+
+  wordpress:
+    type: wordpress
+    config: {}
+
+  homebrew:
+    type: homebrew
+    config: {}
+
 repos:
   - name: "nikhilbadyal.github.io"
     repo: "nikhilbadyal/nikhilbadyal.github.io"
@@ -32,6 +55,36 @@ repos:
     watcher: pypi
     config:
       upload_assets: true
+
+  - name: "nginx-docker"
+    repo: "library/nginx"
+    watcher: dockerhub
+    config:
+      upload_assets: false
+
+  - name: "express-js"
+    repo: "express"
+    watcher: npm
+    config:
+      upload_assets: false
+
+  - name: "spring-boot"
+    repo: "org.springframework.boot:spring-boot-starter"
+    watcher: maven
+    config:
+      upload_assets: false
+
+  - name: "akismet-plugin"
+    repo: "akismet"
+    watcher: wordpress
+    config:
+      upload_assets: false
+
+  - name: "docker-desktop"
+    repo: "homebrew/cask/docker"
+    watcher: homebrew
+    config:
+      upload_assets: false
 
 
 persistence:

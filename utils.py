@@ -11,13 +11,18 @@ from persistence.redis_store import RedisStore
 from watcher.apkmirror import APKMirrorWatcher
 from watcher.apkpure import APKPureWatcher
 from watcher.base import Watcher
+from watcher.dockerhub import DockerHubWatcher
 from watcher.fdroid import FdroidWatcher
 from watcher.github import GitHubWatcher
 from watcher.gitlab import GitLabWatcher
+from watcher.homebrew import HomebrewWatcher
+from watcher.maven import MavenCentralWatcher
+from watcher.npm import NPMWatcher
 from watcher.pypi import PyPIWatcher
+from watcher.wordpress import WordPressWatcher
 
 
-def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:
+def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:  # noqa: C901
     if watcher_type == "github":
         return GitHubWatcher(token=config.get("token"))
     if watcher_type == "gitlab":
@@ -30,6 +35,16 @@ def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:
         return FdroidWatcher()
     if watcher_type == "pypi":
         return PyPIWatcher()
+    if watcher_type == "dockerhub":
+        return DockerHubWatcher(token=config.get("token"))
+    if watcher_type == "npm":
+        return NPMWatcher(registry_url=config.get("registry_url", "https://registry.npmjs.org"))
+    if watcher_type == "maven":
+        return MavenCentralWatcher(base_url=config.get("base_url", "https://search.maven.org"))
+    if watcher_type == "wordpress":
+        return WordPressWatcher(api_url=config.get("api_url", "https://api.wordpress.org/plugins/info/1.2"))
+    if watcher_type == "homebrew":
+        return HomebrewWatcher(api_url=config.get("api_url", "https://formulae.brew.sh/api"))
     msg = f"[ERROR] Watcher type '{watcher_type}' not supported"
     raise NotImplementedError(msg)
 
