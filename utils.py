@@ -14,6 +14,7 @@ from watcher.base import Watcher
 from watcher.fdroid import FdroidWatcher
 from watcher.github import GitHubWatcher
 from watcher.gitlab import GitLabWatcher
+from watcher.pypi import PyPIWatcher
 
 
 def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:
@@ -27,6 +28,8 @@ def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:
         return APKPureWatcher(user_agent=config.get("user_agent"))
     if watcher_type == "fdroid":
         return FdroidWatcher()
+    if watcher_type == "pypi":
+        return PyPIWatcher()
     msg = f"[ERROR] Watcher type '{watcher_type}' not supported"
     raise NotImplementedError(msg)
 

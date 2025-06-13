@@ -1,4 +1,5 @@
 import os
+import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
@@ -165,6 +166,7 @@ class RepoProcessor:
                     self._update_persistence(release)
 
         except Exception as e:
+            traceback.print_exc()
             # Catch any unhandled exceptions during the process
             print(f"🔥 An unexpected error occurred while processing {self.repo_id}: {e}")
         finally:

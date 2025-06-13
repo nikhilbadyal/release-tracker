@@ -10,6 +10,10 @@ watchers:
       token: "${GITLAB_TOKEN}"
       base_url: "https://gitlab.com/api/v4"
 
+  pypi:
+    type: pypi
+    config: {}
+
 repos:
   - name: "nikhilbadyal.github.io"
     repo: "nikhilbadyal/nikhilbadyal.github.io"
@@ -17,12 +21,17 @@ repos:
     config:
       upload_assets: false
 
-
   - name: "AuroraStore"
     repo: "AuroraOSS/AuroraStore"
     watcher: gitlab
     config:
       upload_assets: false
+
+  - name: "requests"
+    repo: "requests"
+    watcher: pypi
+    config:
+      upload_assets: true
 
 
 persistence:
