@@ -40,7 +40,7 @@ def notify_all(repo_id: str, release: "ReleaseInfo", notifiers: list[Notifier], 
     """Sends notifications for a new release using all configured notifiers."""
     print(f"📣 Sending notifications for {repo_id} @ {release.tag}")
     if not notifiers:
-        print("ℹ️ No notifiers configured.")  # noqa: RUF001
+        print("ℹ️ No notifiers configured.")
         return
 
     for notifier in notifiers:
@@ -119,7 +119,7 @@ class RepoProcessor:
             if release:
                 print(f"✅ Latest release fetched: {release.tag}")
             else:
-                print(f"ℹ️ No releases found for {self.repo_id} or watcher returned None.")  # noqa: RUF001
+                print(f"ℹ️ No releases found for {self.repo_id} or watcher returned None.")
         except Exception as e:
             print(f"⚠️  Failed to fetch release for {self.repo_id}: {e}")
             return None
@@ -229,7 +229,7 @@ def main() -> None:
 
     repo_entries = config.get("repos", [])
     if not repo_entries:
-        print("ℹ️ No repositories configured to watch.")  # noqa: RUF001
+        print("ℹ️ No repositories configured to watch.")
         return
 
     print(f"👀 Watching {len(repo_entries)} repositories.")

@@ -27,7 +27,9 @@ ignore = [
     "FBT001",
     "D205",
     "FBT002",
-    "BLE001"
+    "BLE001",
+    "PLR2004",
+    "RUF001"
 ]
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

@@ -29,7 +29,7 @@ class APKMirrorWatcher(Watcher):
 
         apps = result.get("data", [])
         if not apps:
-            print(f"ℹ️ No data found for {repo_id} on APKMirror.")  # noqa: RUF001
+            print(f"ℹ️ No data found for {repo_id} on APKMirror.")
             msg = f"No data found for {repo_id} on APKMirror."
             raise ValueError(msg)
 
@@ -41,7 +41,7 @@ class APKMirrorWatcher(Watcher):
 
         release = app_info.get("release")
         if not release:
-            print(f"ℹ️ App '{repo_id}' has no release info.")  # noqa: RUF001
+            print(f"ℹ️ App '{repo_id}' has no release info.")
             msg = f"App '{repo_id}' has no release info."
             raise ValueError(msg)
 
