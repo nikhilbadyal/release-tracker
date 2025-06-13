@@ -7,6 +7,8 @@ from config.loader import load_config
 from env_parser import resolve_env_placeholders_recursive
 from notifier.base import Notifier
 from persistence.base import PersistenceBackend
+
+# noinspection PyUnresolvedReferences
 from render_message import RenderFormat, render_message
 from utils import build_watcher, download_asset, get_backend, get_notifier
 
@@ -42,6 +44,7 @@ def notify_all(repo_id: str, release: "ReleaseInfo", notifiers: list[Notifier], 
         return
 
     for notifier in notifiers:
+        # noinspection PyTypeHints
         fmt = cast("RenderFormat", getattr(notifier, "message_format", "text"))
         try:
             body = render_message(repo_id, release, render_format=fmt)
@@ -88,11 +91,21 @@ class RepoProcessor:
         self.merged_conf = resolve_env_placeholders_recursive(merged_conf_raw)  # Store for later use (e.g., token)
 
         # Use a cache key based on the merged, resolved configuration
-        cache_key = f"{self.watcher_key}:{hash(frozenset(self.merged_conf.items()))}"
+        try:
+            # Create a stable hash for the configuration
+            config_items = sorted(self.merged_conf.items()) if self.merged_conf else []
+            cache_key = f"{self.watcher_key}:{hash(frozenset(config_items))}"
+        except TypeError:
+            # Fallback if config contains unhashable types
+            cache_key = f"{self.watcher_key}:{id(self.merged_conf)}"
 
         if cache_key not in self.watcher_cache:
             print(f"🛠️ Building new watcher for {self.repo_id} ({watcher_type})")
-            self.watcher_cache[cache_key] = build_watcher(watcher_type, self.merged_conf)
+            try:
+                self.watcher_cache[cache_key] = build_watcher(watcher_type, self.merged_conf)
+            except Exception as e:
+                print(f"❌ Failed to build watcher for {self.repo_id}: {e}")
+                raise
         else:
             print(f"♻️ Using cached watcher for {self.repo_id}")
 
@@ -129,14 +142,22 @@ class RepoProcessor:
         print(f"📦 New: {release.tag}")
         return True
 
-    def _process_and_notify(self, release: "ReleaseInfo") -> list[Path]:
+    def _process_and_notify(self, release: "ReleaseInfo") -> None:
         """Processes assets and sends notifications for a new release."""
         upload_assets = self.merged_conf.get("upload_assets", self.global_upload_assets)
         asset_token = self.merged_conf.get("token")  # Pass token from merged config if available
 
         attachments = process_assets(release, upload_assets, asset_token)
-        notify_all(self.repo_id, release, self.notifiers, attachments)
-        return attachments  # Return paths in case they need cleanup
+        try:
+            notify_all(self.repo_id, release, self.notifiers, attachments)
+        finally:
+            for attachment in attachments:
+                try:
+                    if attachment.exists():
+                        attachment.unlink(missing_ok=True)
+                        print(f"🗑️  Cleaned up {attachment.name}")
+                except Exception as e:
+                    print(f"⚠️  Failed to clean up {attachment.name}: {e}")
 
     def _update_persistence(self, release: "ReleaseInfo") -> None:
         """Updates the persistence backend with the new release tag."""
@@ -161,9 +182,8 @@ class RepoProcessor:
             if self._is_new_release(release):
                 # Process assets and notify only if it's a new or forced release
                 self._process_and_notify(release)
-                last_tag_before_check = self.backend.get_last_release(self.key)
-                if last_tag_before_check != release.tag or (os.getenv("FORCE_NOTIFY") is not None):
-                    self._update_persistence(release)
+                # Always update persistence for new releases (including forced notifications)
+                self._update_persistence(release)
 
         except Exception as e:
             traceback.print_exc()

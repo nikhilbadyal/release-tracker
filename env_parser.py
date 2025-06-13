@@ -4,8 +4,9 @@ from typing import Any
 
 # Pattern to find ${VAR_NAME} anywhere in a string
 # We remove the ^ and $ anchors to allow matching within strings.
-# [\w\d_]+ matches one or more word characters (a-z, A-Z, 0-9, _)
-ENV_VAR_PLACEHOLDER_PATTERN = re.compile(r"\${(?P<env>[\w\d_]+)}")
+# [\w\d_-]+ matches one or more word characters (a-z, A-Z, 0-9, _, -)
+# Note: Hyphens are valid in environment variable names in some systems
+ENV_VAR_PLACEHOLDER_PATTERN = re.compile(r"\${(?P<env>[\w\d_-]+)}")
 
 
 class EnvironmentVariableNotFoundError(KeyError):
@@ -36,7 +37,8 @@ def _resolve_value_recursive(value: Any, strict: bool) -> Any:
                     # this results in "". If a config *requires* a value (even empty),
                     # strict mode is better.
                     return ""
-                return env_value
+                # Strip leading/trailing whitespace from environment values
+                return env_value.strip()
 
             # Apply the replacement function to all matches in the string
             # We use the compiled pattern for efficiency

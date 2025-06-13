@@ -21,13 +21,36 @@ class S3ConfigLoader(ConfigLoader):
         bucket = parsed.netloc
         key = parsed.path.lstrip("/")
 
-        s3 = boto3.client(
-            "s3",
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
-            endpoint_url=self.endpoint_url,
-            region_name=self.region_name,
-        )
+        if not bucket or not key:
+            msg = f"Invalid S3 URL format: {self.s3_url}. Expected format: s3://bucket/path/to/config.yaml"
+            raise ValueError(msg)
 
-        obj = s3.get_object(Bucket=bucket, Key=key)
-        return yaml.safe_load(obj["Body"].read().decode())  # type: ignore[no-any-return]
+        try:
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key,
+                endpoint_url=self.endpoint_url,
+                region_name=self.region_name,
+            )
+
+            obj = s3.get_object(Bucket=bucket, Key=key)
+            content = obj["Body"].read().decode()
+
+            if not content.strip():
+                msg = f"Empty S3 config file: {self.s3_url}"
+                raise ValueError(msg)
+
+            config = yaml.safe_load(content)
+            if config is None:
+                msg = f"S3 config file contains only whitespace or is empty: {self.s3_url}"
+                raise ValueError(msg)
+
+        except yaml.YAMLError as e:
+            msg = f"Invalid YAML in S3 config file {self.s3_url}: {e}"
+            raise ValueError(msg) from e
+        except Exception as e:
+            msg = f"Failed to load config from S3 {self.s3_url}: {e}"
+            raise ConnectionError(msg) from e
+        else:
+            return config  # type: ignore[no-any-return]

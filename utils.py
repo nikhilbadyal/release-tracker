@@ -63,10 +63,13 @@ def download_asset(url: str, dest: Path, token: str | None = None) -> None:
 def get_notifier(config: dict[str, Any]) -> Notifier:
     notifier_type = config.get("type")
     if notifier_type == "apprise":
-        notifier = AppriseNotifier(config["config"])
+        # Pass the format in the config so AppriseNotifier can handle it properly
+        notifier_config = config["config"].copy()
+        if "format" in config:
+            notifier_config["format"] = config["format"]
+        notifier = AppriseNotifier(notifier_config)
     else:
         msg = f"Unsupported notifier type: {notifier_type}"
         raise ValueError(msg)
 
-    notifier.message_format = config.get("format", "text").lower()
     return notifier

@@ -41,7 +41,7 @@ persistence:
     port: 6379
     db: 0
 
-notifier:
-  type: apprise
-  config:
-    url: "${APPRISE_URL}"
+notifiers:
+  - type: apprise
+    config:
+      url: "${APPRISE_URL}"
