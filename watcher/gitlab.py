@@ -31,10 +31,23 @@ class GitLabWatcher(Watcher):
         tag_name = latest["tag_name"]
         assets: list[ReleaseAsset] = []
 
+        # Add source code assets (zip, tar.gz, tar.bz2, tar)
+        for source in latest.get("assets", {}).get("sources", []):
+            name = f"{repo.split('/')[-1]}-{tag_name}.{source['format']}"
+            download_url = source["url"]
+            assets.append(ReleaseAsset(name=name, download_url=download_url, api_url=download_url))
+
+        # Add custom asset links
         for link in latest.get("assets", {}).get("links", []):
             name = link["name"]
             download_url = link["url"]
-            # GitLab doesn't provide an API URL for direct asset downloading like GitHub
-            assets.append(ReleaseAsset(name=name, download_url=download_url, api_url=download_url))
+
+            # If there's a direct_asset_url, use that for better download experience
+            if link.get("direct_asset_url"):
+                download_url = link["direct_asset_url"]
+
+            # Use the original link URL as api_url for reference
+            api_url = link["url"]
+            assets.append(ReleaseAsset(name=name, download_url=download_url, api_url=api_url))
 
         return ReleaseInfo(tag=tag_name, assets=assets)

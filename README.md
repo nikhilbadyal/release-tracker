@@ -27,12 +27,14 @@ python main.py
 - [Installation](#-installation)
 - [Configuration](#-configuration)
 - [Docker Deployment](#-docker-deployment)
+- [CLI Usage](#-cli-usage)
 - [Watchers](#-watchers)
 - [Persistence Backends](#-persistence-backends)
 - [Notification Systems](#-notification-systems)
 - [Configuration Reference](#-configuration-reference)
 - [Environment Variables](#-environment-variables)
 - [Usage Examples](#-usage-examples)
+- [Documentation](#-documentation)
 - [Extending the System](#-extending-the-system)
 - [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
@@ -51,14 +53,14 @@ python main.py
 
 ## 🌐 Supported Platforms
 
-| Platform | Type | Authentication | Asset Support | Status |
-|----------|------|----------------|---------------|--------|
-| **GitHub** | Git Repository | Token (optional) | ✅ | Stable |
-| **GitLab** | Git Repository | Token (optional) | ✅ | Stable |
-| **PyPI** | Python Package | None | ✅ | Stable |
-| **APKMirror** | Android APK | Token | ✅ | Stable |
-| **APKPure** | Android APK | None | ✅ | Stable |
-| **F-Droid** | Android APK | None | ✅ | Stable |
+| Platform      | Type           | Authentication   | Asset Support | Status |
+|---------------|----------------|------------------|---------------|--------|
+| **GitHub**    | Git Repository | Token (optional) | ✅             | Stable |
+| **GitLab**    | Git Repository | Token (optional) | ✅             | Stable |
+| **PyPI**      | Python Package | None             | ✅             | Stable |
+| **APKMirror** | Android APK    | Token            | ✅             | Stable |
+| **APKPure**   | Android APK    | None             | ✅             | Stable |
+| **F-Droid**   | Android APK    | None             | ✅             | Stable |
 
 ## 🛠 Installation
 
@@ -216,6 +218,38 @@ docker run -d --name release-tracker \
   -e APPRISE_URL="$APPRISE_URL" \
   release-tracker
 ```
+
+## 💻 CLI Usage
+
+The Release Tracker supports both full checking mode and single repository mode via command-line interface.
+
+### Check All Repositories (Default)
+```bash
+python main.py
+```
+
+### Check Single Repository
+```bash
+# Check a GitHub repository (explicit watcher)
+python main.py -r microsoft/vscode -w github
+
+# Check a repository configured in config.yaml (automatic watcher detection)
+python main.py -r microsoft/vscode
+
+# Check a PyPI package
+python main.py -r django -w pypi
+```
+
+### Available Options
+- `-r, --repo`: Repository identifier (format varies by platform)
+- `-w, --watcher`: Platform type (optional if repo is in config.yaml)
+- `--help`: Show help message
+
+**Note:**
+- If `--watcher` is not provided, the tool looks for the repository in your `config.yaml` file to determine the watcher type
+- All other configuration (asset downloading, notifications, etc.) comes from your `config.yaml` file
+
+For detailed CLI documentation, see [docs/CLI_USAGE.md](docs/CLI_USAGE.md).
 
 ## 👁️ Watchers
 
@@ -463,19 +497,27 @@ watchers:
 
 ## 🔧 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `CONFIG_SOURCE` | Configuration file location | `config.yaml` |
-| `FORCE_NOTIFY` | Force notifications even for seen releases | Not set |
-| `GH_TOKEN` | GitHub personal access token | Not set |
-| `GITLAB_TOKEN` | GitLab personal access token | Not set |
-| `APPRISE_URL` | Apprise notification URL | Not set |
-| `REDIS_HOST` | Redis server hostname | `localhost` |
-| `REDIS_PORT` | Redis server port | `6379` |
-| `REDIS_DB` | Redis database number | `0` |
-| `AWS_ACCESS_KEY_ID` | AWS access key for S3 config | Not set |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key for S3 config | Not set |
-| `AWS_REGION` | AWS region for S3 config | Not set |
+The Release Tracker supports multiple environment variables for configuration and authentication. Here's a quick reference:
+
+| Variable                | Description                                | Default       |
+|-------------------------|--------------------------------------------|---------------|
+| `CONFIG_SOURCE`         | Configuration file location                | `config.yaml` |
+| `FORCE_NOTIFY`          | Force notifications even for seen releases | Not set       |
+| `GH_TOKEN`              | GitHub personal access token               | Not set       |
+| `GITLAB_TOKEN`          | GitLab personal access token               | Not set       |
+| `DOCKER_TOKEN`          | Docker Hub authentication token            | Not set       |
+| `APKMIRROR_TOKEN`       | APKMirror API authentication token         | Not set       |
+| `APPRISE_URL`           | Apprise notification URL                   | Not set       |
+| `REDIS_HOST`            | Redis server hostname                      | `localhost`   |
+| `REDIS_PORT`            | Redis server port                          | `6379`        |
+| `REDIS_DB`              | Redis database number                      | `0`           |
+| `REDIS_PASSWORD`        | Redis authentication password              | Not set       |
+| `AWS_ACCESS_KEY_ID`     | AWS access key for S3 config               | Not set       |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key for S3 config               | Not set       |
+| `AWS_REGION`            | AWS region for S3 config                   | Not set       |
+| `S3_ENDPOINT_URL`       | Custom S3 endpoint (CloudFlare R2, MinIO)  | Not set       |
+
+For detailed information, usage examples, and best practices, see **[Environment Variables Documentation](docs/ENVIRONMENT_VARIABLES.md)**.
 
 ## 📚 Usage Examples
 
@@ -534,6 +576,16 @@ repos:
   - {name: "Telegram", repo: "org.telegram.messenger", watcher: apkpure}
   - {name: "Firefox", repo: "org.mozilla.firefox", watcher: fdroid}
 ```
+
+## 📚 Documentation
+
+For detailed information about specific topics, see the following documentation files:
+
+- **[CLI Usage](docs/CLI_USAGE.md)** - Comprehensive CLI command reference and examples
+- **[Watchers](docs/WATCHERS.md)** - Detailed watcher configurations and platform-specific features
+- **[Configuration Sources](docs/CONFIG_SOURCES.md)** - Advanced configuration loading from various sources
+- **[Environment Variables](docs/ENVIRONMENT_VARIABLES.md)** - Complete reference for all supported environment variables
+- **[Redis Utils](docs/REDIS_UTILS.md)** - Redis setup, management, and troubleshooting utilities
 
 ## 🔌 Extending the System
 

@@ -3,6 +3,8 @@ import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
+import click
+
 from config.loader import load_config
 from env_parser import resolve_env_placeholders_recursive
 from notifier.base import Notifier
@@ -193,7 +195,68 @@ class RepoProcessor:
             print(f"--- Finished processing {self.repo_id} ---\n")
 
 
-def main() -> None:
+def find_repo_watcher_in_config(repo: str, config: dict[str, Any]) -> str | None:
+    """Find the watcher type for a repo in the config file."""
+    repos = config.get("repos", [])
+    for repo_entry in repos:
+        if repo_entry.get("repo") == repo:
+            return repo_entry.get("watcher")  # type: ignore[no-any-return]
+    return None
+
+
+def check_single_repo(repo: str, watcher_type: str) -> None:
+    """Check a single repository for new releases."""
+    print(f"🚀 Checking single repository: {repo}")
+    config = load_config()
+
+    try:
+        backend = get_backend(config.get("persistence", {}))
+        print(f"🗄️ Using persistence backend: {type(backend).__name__}")
+    except Exception as e:
+        print(f"❌ Failed to initialize persistence backend: {e}")
+        return
+
+    # Initialize notifiers
+    notifiers: list[Notifier] = []
+    try:
+        notifiers = [get_notifier(nc) for nc in config.get("notifiers", [])]
+        print(f"🔔 Initialized {len(notifiers)} notifier(s)")
+    except Exception as e:
+        print(f"⚠️  Failed to initialize notifiers: {e}")
+        notifiers = []
+
+    if not notifiers:
+        print("⚠️  No notifiers available - you'll only see console output.")
+
+    # Create a single repo entry - config will be empty, using defaults from config file
+    repo_entry = {
+        "repo": repo,
+        "watcher": watcher_type,
+        "config": {},
+    }
+
+    watcher_cache: dict[str, Watcher] = {}
+    global_upload_assets = config.get("upload_assets", False)
+
+    try:
+        processor = RepoProcessor(
+            repo_entry=repo_entry,
+            watchers_conf=config.get("watchers", {}),
+            watcher_cache=watcher_cache,
+            backend=backend,
+            notifiers=notifiers,
+            global_upload_assets=global_upload_assets,
+        )
+        processor.process()
+    except Exception as e:
+        print(f"❌ An error occurred while processing {repo}: {e}")
+        traceback.print_exc()
+
+    print("✅ Single repo check finished.")
+
+
+def run_full_check() -> None:
+    """Run the full release checker with all configured repositories."""
     print("🚀 Starting release checker...")
     config = load_config()
 
@@ -251,6 +314,75 @@ def main() -> None:
             print(f"❌ An error prevented processing of {repo_id}: {e}")
 
     print("✅ Release checker finished.")
+
+
+@click.command()
+@click.option(
+    "--repo",
+    "-r",
+    help="Repository to check (e.g., 'owner/repo' for GitHub, 'package-name' for PyPI)",
+)
+@click.option(
+    "--watcher",
+    "-w",
+    type=click.Choice(
+        [
+            "github",
+            "gitlab",
+            "pypi",
+            "dockerhub",
+            "npm",
+            "maven",
+            "wordpress",
+            "homebrew",
+            "apkmirror",
+            "apkpure",
+            "fdroid",
+        ],
+    ),
+    help="Watcher type to use for checking the repository (optional if repo is in config file)",
+)
+def main(repo: str | None, watcher: str | None) -> None:
+    """Release Tracker - Monitor software releases across multiple platforms.
+
+    If --repo is provided, checks only that specific repository.
+    If --watcher is not provided, looks for the repo in config.yaml to determine the watcher.
+    If neither --repo nor --watcher is provided, runs the full checker with all configured repositories.
+
+    Examples
+    --------
+      python main.py                              # Run full checker
+      python main.py -r owner/repo -w github     # Check single GitHub repo (explicit watcher)
+      python main.py -r owner/repo               # Check single repo (watcher from config)
+      python main.py -r package-name -w pypi     # Check single PyPI package
+    """
+    if repo:
+        # Single repo mode
+        if watcher:
+            # Watcher explicitly provided
+            check_single_repo(repo, watcher)
+        else:
+            # Try to find watcher from config file
+            config = load_config()
+            found_watcher = find_repo_watcher_in_config(repo, config)
+            if found_watcher:
+                print(f"🔍 Found {repo} in config file using watcher: {found_watcher}")
+                check_single_repo(repo, found_watcher)
+            else:
+                click.echo(f"❌ Error: Repository '{repo}' not found in config file.", err=True)
+                click.echo("Please either:", err=True)
+                click.echo("  1. Add the repository to your config.yaml file, or", err=True)
+                click.echo("  2. Specify the watcher type with -w/--watcher option", err=True)
+                click.echo("Use 'python main.py --help' for available watcher types.", err=True)
+                return
+    elif watcher:
+        # Only watcher provided, repo missing
+        click.echo("❌ Error: --repo must be provided when using --watcher.", err=True)
+        click.echo("Use 'python main.py --help' for usage information.", err=True)
+        return
+    else:
+        # Full check mode
+        run_full_check()
 
 
 if __name__ == "__main__":
