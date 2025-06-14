@@ -30,4 +30,5 @@ class FileBackend(PersistenceBackend):
         self._save_data()
 
     def close(self) -> None:
+        # I don't need to do anything here since the data is saved automatically
         pass

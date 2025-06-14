@@ -126,8 +126,6 @@ class HomebrewWatcher(Watcher):
 
         # Extract additional metadata
         homepage = cask_data.get("homepage", "")
-        name = cask_data.get("name", [])
-        name[0] if name else cask_name
 
         # Create assets
         assets = []

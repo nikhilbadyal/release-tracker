@@ -4,9 +4,9 @@ from typing import Any
 
 # Pattern to find ${VAR_NAME} anywhere in a string
 # We remove the ^ and $ anchors to allow matching within strings.
-# [\w\d_-]+ matches one or more word characters (a-z, A-Z, 0-9, _, -)
+# [\w-]+ matches one or more word characters (a-z, A-Z, 0-9, _) and hyphens
 # Note: Hyphens are valid in environment variable names in some systems
-ENV_VAR_PLACEHOLDER_PATTERN = re.compile(r"\${(?P<env>[\w\d_-]+)}")
+ENV_VAR_PLACEHOLDER_PATTERN = re.compile(r"\${(?P<env>[\w-]+)}")
 
 
 class EnvironmentVariableNotFoundError(KeyError):

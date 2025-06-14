@@ -374,12 +374,10 @@ def main(repo: str | None, watcher: str | None) -> None:
                 click.echo("  1. Add the repository to your config.yaml file, or", err=True)
                 click.echo("  2. Specify the watcher type with -w/--watcher option", err=True)
                 click.echo("Use 'python main.py --help' for available watcher types.", err=True)
-                return
     elif watcher:
         # Only watcher provided, repo missing
         click.echo("❌ Error: --repo must be provided when using --watcher.", err=True)
         click.echo("Use 'python main.py --help' for usage information.", err=True)
-        return
     else:
         # Full check mode
         run_full_check()
