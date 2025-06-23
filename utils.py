@@ -71,8 +71,7 @@ def download_asset(url: str, dest: Path, token: str | None = None) -> None:
     response.raise_for_status()
 
     with Path(dest).open("wb") as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            f.write(chunk)
+        f.writelines(response.iter_content(chunk_size=8192))
 
 
 def get_notifier(config: dict[str, Any]) -> Notifier:
