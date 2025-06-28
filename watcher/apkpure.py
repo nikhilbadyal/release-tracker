@@ -12,6 +12,10 @@ class APKPureWatcher(Watcher):
             "User-Agent": user_agent,
         }
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the APKPure app URL."""
+        return f"https://apkpure.net/p/{repo_id}"
+
     def fetch_latest_release(self, repo: str) -> ReleaseInfo:
         url = f"https://apkpure.net/p/{repo}"
         try:
@@ -38,7 +42,7 @@ class APKPureWatcher(Watcher):
                 download_url=url,
                 api_url=url,
             )
-            return ReleaseInfo(tag=latest_version, assets=[asset])
+            return ReleaseInfo(tag=latest_version, assets=[asset], source_url=self.get_source_url(repo))
 
         msg = "Unable to find the app name or latest version on the page."
         raise ValueError(msg)

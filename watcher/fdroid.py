@@ -14,6 +14,10 @@ class FdroidWatcher(Watcher):
         self.repo_url: str = config.get("repo_url", "https://f-droid.org/repo/")
         self.user_agent: str = config.get("user_agent", "release-tracker")
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the F-Droid package URL."""
+        return f"https://f-droid.org/en/packages/{repo_id}/"
+
     def fetch_latest_release(self, repo_id: str) -> ReleaseInfo:
         package_url: str = f"{self.base_url}{repo_id}/"
         headers: dict[str, str] = {"User-Agent": self.user_agent}
@@ -56,4 +60,4 @@ class FdroidWatcher(Watcher):
             download_url=download_url,
             api_url=package_url,
         )
-        return ReleaseInfo(tag=latest_version, assets=[asset])
+        return ReleaseInfo(tag=latest_version, assets=[asset], source_url=self.get_source_url(repo_id))

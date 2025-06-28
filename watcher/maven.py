@@ -14,6 +14,13 @@ class MavenCentralWatcher(Watcher):
         self.base_url = base_url.rstrip("/")
         self.api_url = f"{self.base_url}/solrsearch/select"
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the Maven Central artifact URL."""
+        if ":" in repo_id:
+            group_id, artifact_id = repo_id.split(":", 1)
+            return f"https://central.sonatype.com/artifact/{group_id}/{artifact_id}"
+        return f"https://search.maven.org/search?q={repo_id}"
+
     def fetch_latest_release(self, artifact: str) -> ReleaseInfo:
         """
         Fetch the latest version from Maven Central.
@@ -116,4 +123,4 @@ class MavenCentralWatcher(Watcher):
             ),
         )
 
-        return ReleaseInfo(tag=version, assets=assets)
+        return ReleaseInfo(tag=version, assets=assets, source_url=self.get_source_url(artifact))

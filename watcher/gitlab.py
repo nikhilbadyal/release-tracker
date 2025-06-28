@@ -12,6 +12,11 @@ class GitLabWatcher(Watcher):
         self.base_url = base_url
         self.headers = {"PRIVATE-TOKEN": token} if token else {}
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the GitLab repository URL."""
+        gitlab_base = self.base_url[:-7] if self.base_url.endswith("/api/v4") else "https://gitlab.com"
+        return f"{gitlab_base}/{repo_id}"
+
     def fetch_latest_release(self, repo: str) -> ReleaseInfo:
         # GitLab repo format: namespace/project
         encoded_repo = quote(repo, safe="")
@@ -50,4 +55,4 @@ class GitLabWatcher(Watcher):
             api_url = link["url"]
             assets.append(ReleaseAsset(name=name, download_url=download_url, api_url=api_url))
 
-        return ReleaseInfo(tag=tag_name, assets=assets)
+        return ReleaseInfo(tag=tag_name, assets=assets, source_url=self.get_source_url(repo))

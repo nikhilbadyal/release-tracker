@@ -11,6 +11,10 @@ class APKMirrorWatcher(Watcher):
         self.user_agent = config.get("user_agent", "release-tracker")
         self.api_url = config.get("api_url", "https://www.apkmirror.com/wp-json/apkm/v1/app_exists/")
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the APKMirror app URL."""
+        return f"https://www.apkmirror.com/apk/{repo_id.replace('.', '-')}/"
+
     def fetch_latest_release(self, repo_id: str) -> ReleaseInfo:
         headers = {
             "Authorization": f"Basic {self.auth_token}",
@@ -54,4 +58,4 @@ class APKMirrorWatcher(Watcher):
             download_link = f"https://www.apkmirror.com{apk['link']}"
             assets.append(ReleaseAsset(name=apk_name, download_url=download_link, api_url=download_link))
 
-        return ReleaseInfo(tag=version, assets=assets)
+        return ReleaseInfo(tag=version, assets=assets, source_url=self.get_source_url(repo_id))

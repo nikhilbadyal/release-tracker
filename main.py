@@ -144,6 +144,7 @@ class RepoProcessor:
         print(f"📦 New: {release.tag}")
         return True
 
+    # noinspection PyUnreachableCode
     def _process_and_notify(self, release: "ReleaseInfo") -> None:
         """Processes assets and sends notifications for a new release."""
         upload_assets = self.merged_conf.get("upload_assets", self.global_upload_assets)

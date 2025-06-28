@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
@@ -19,34 +19,41 @@ from watcher.homebrew import HomebrewWatcher
 from watcher.maven import MavenCentralWatcher
 from watcher.npm import NPMWatcher
 from watcher.pypi import PyPIWatcher
-from watcher.wordpress import WordPressWatcher
+from watcher.wordpress import WordPressPluginWatcher, WordPressThemeWatcher
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
-def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:  # noqa: C901
-    if watcher_type == "github":
-        return GitHubWatcher(token=config.get("token"))
-    if watcher_type == "gitlab":
-        return GitLabWatcher(token=config.get("token"), base_url=config.get("base_url", "https://gitlab.com/api/v4"))
-    if watcher_type == "apkmirror":
-        return APKMirrorWatcher(config=config)
-    if watcher_type == "apkpure":
-        return APKPureWatcher(user_agent=config.get("user_agent"))
-    if watcher_type == "fdroid":
-        return FdroidWatcher()
-    if watcher_type == "pypi":
-        return PyPIWatcher()
-    if watcher_type == "dockerhub":
-        return DockerHubWatcher(token=config.get("token"))
-    if watcher_type == "npm":
-        return NPMWatcher(registry_url=config.get("registry_url", "https://registry.npmjs.org"))
-    if watcher_type == "maven":
-        return MavenCentralWatcher(base_url=config.get("base_url", "https://search.maven.org"))
-    if watcher_type == "wordpress":
-        return WordPressWatcher(api_url=config.get("api_url", "https://api.wordpress.org/plugins/info/1.2"))
-    if watcher_type == "homebrew":
-        return HomebrewWatcher(api_url=config.get("api_url", "https://formulae.brew.sh/api"))
-    msg = f"[ERROR] Watcher type '{watcher_type}' not supported"
-    raise NotImplementedError(msg)
+def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:
+    """Build a watcher instance based on the watcher type and configuration."""
+    watcher_builders: dict[str, Callable[[], Watcher]] = {
+        "github": lambda: GitHubWatcher(token=config.get("token")),
+        "gitlab": lambda: GitLabWatcher(
+            token=config.get("token"),
+            base_url=config.get("base_url", "https://gitlab.com/api/v4"),
+        ),
+        "apkmirror": lambda: APKMirrorWatcher(config=config),
+        "apkpure": lambda: APKPureWatcher(user_agent=config.get("user_agent")),
+        "fdroid": lambda: FdroidWatcher(),
+        "pypi": lambda: PyPIWatcher(),
+        "dockerhub": lambda: DockerHubWatcher(token=config.get("token")),
+        "npm": lambda: NPMWatcher(registry_url=config.get("registry_url", "https://registry.npmjs.org")),
+        "maven": lambda: MavenCentralWatcher(base_url=config.get("base_url", "https://search.maven.org")),
+        "wordpress-plugin": lambda: WordPressPluginWatcher(
+            api_url=config.get("api_url", "https://api.wordpress.org/plugins/info/1.0"),
+        ),
+        "wordpress-theme": lambda: WordPressThemeWatcher(
+            api_url=config.get("api_url", "https://api.wordpress.org/themes/info/1.2/"),
+        ),
+        "homebrew": lambda: HomebrewWatcher(api_url=config.get("api_url", "https://formulae.brew.sh/api")),
+    }
+
+    if watcher_type not in watcher_builders:
+        msg = f"[ERROR] Watcher type '{watcher_type}' not supported"
+        raise NotImplementedError(msg)
+
+    return watcher_builders[watcher_type]()
 
 
 def get_backend(config: dict[str, Any]) -> PersistenceBackend:

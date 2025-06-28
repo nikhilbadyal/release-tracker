@@ -9,6 +9,10 @@ class GitHubWatcher(Watcher):
     def __init__(self, token: str | None = None) -> None:
         self.headers = {"Authorization": f"token {token}"} if token else {}
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the GitHub repository URL."""
+        return f"https://github.com/{repo_id}"
+
     def fetch_latest_release(self, repo: str) -> ReleaseInfo:
         url = f"https://api.github.com/repos/{repo}/releases/latest"
         r = requests.get(url, headers=self.headers, timeout=10)
@@ -27,4 +31,4 @@ class GitHubWatcher(Watcher):
             )
             for asset in data.get("assets", [])
         ]
-        return ReleaseInfo(tag=data["tag_name"], assets=assets)
+        return ReleaseInfo(tag=data["tag_name"], assets=assets, source_url=self.get_source_url(repo))

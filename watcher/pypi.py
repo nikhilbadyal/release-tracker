@@ -12,6 +12,10 @@ class PyPIWatcher(Watcher):
     def __init__(self) -> None:
         """Initialize PyPI watcher. No authentication required for PyPI API."""
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the PyPI package URL."""
+        return f"https://pypi.org/project/{repo_id}/"
+
     def fetch_latest_release(self, package: str) -> ReleaseInfo:
         """
         Fetch the latest release for a PyPI package.
@@ -70,4 +74,4 @@ class PyPIWatcher(Watcher):
                     ),
                 )
 
-        return ReleaseInfo(tag=version, assets=assets)
+        return ReleaseInfo(tag=version, assets=assets, source_url=self.get_source_url(package))

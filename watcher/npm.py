@@ -13,7 +13,11 @@ class NPMWatcher(Watcher):
     def __init__(self, registry_url: str = "https://registry.npmjs.org") -> None:
         self.registry_url = registry_url.rstrip("/")
 
-    def fetch_latest_release(self, package_name: str) -> ReleaseInfo:
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the NPM package URL."""
+        return f"https://www.npmjs.com/package/{repo_id}"
+
+    def fetch_latest_release(self, package: str) -> ReleaseInfo:
         """
         Fetch the latest version from NPM registry.
 
@@ -21,53 +25,48 @@ class NPMWatcher(Watcher):
             package_name: NPM package name (e.g., "express" or "@types/node")
         """
         # Handle scoped packages - URL encode the @ symbol
-        if package_name.startswith("@"):
-            package_name = package_name.replace("@", "%40")
+        if package.startswith("@"):
+            package = package.replace("@", "%40")
 
-        package_url = f"{self.registry_url}/{package_name}"
+        url = f"{self.registry_url}/{package}"
 
         try:
-            response = requests.get(package_url, timeout=10)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
-            package_data = response.json()
+            data = response.json()
         except requests.RequestException as e:
-            msg = f"Failed to fetch NPM package {package_name}: {e}"
+            msg = f"Failed to fetch NPM data for {package}: {e}"
             raise ValueError(msg) from e
 
-        # Get the latest version info
-        latest_version = package_data.get("dist-tags", {}).get("latest")
+        # Get the latest version
+        latest_version = data.get("dist-tags", {}).get("latest")
         if not latest_version:
-            msg = f"No latest version found for NPM package {package_name}"
+            msg = f"No latest version found for {package}"
             raise ValueError(msg)
 
-        versions = package_data.get("versions", {})
-        version_info = versions.get(latest_version)
-        if not version_info:
-            msg = f"Version info not found for {package_name}@{latest_version}"
+        # Get version-specific data
+        version_data = data.get("versions", {}).get(latest_version, {})
+        if not version_data:
+            msg = f"No data found for version {latest_version} of {package}"
             raise ValueError(msg)
 
-        # Get distribution info
-        dist_info = version_info.get("dist", {})
-        tarball_url = dist_info.get("tarball", "")
-        dist_info.get("shasum", "")
-
-        # Package metadata
-        package_display_name = package_data.get("name", package_name)
-        homepage = package_data.get("homepage", "")
-        repository = package_data.get("repository", {})
-
-        # Create assets
-        assets = []
-
-        # Tarball asset
-        if tarball_url:
+        # Create assets from the dist information
+        assets: list[ReleaseAsset] = []
+        dist = version_data.get("dist", {})
+        if dist.get("tarball"):
+            tarball_name = f"{package}-{latest_version}.tgz"
             assets.append(
                 ReleaseAsset(
-                    name=f"{package_display_name}-{latest_version}.tgz",
-                    download_url=tarball_url,
-                    api_url=package_url,
+                    name=tarball_name,
+                    download_url=dist["tarball"],
+                    api_url=dist["tarball"],
                 ),
             )
+
+        # Package metadata
+        data.get("name", package)
+        homepage = data.get("homepage", "")
+        repository = data.get("repository", {})
 
         # If there's a repository URL, include it as an asset
         if isinstance(repository, dict) and repository.get("url"):
@@ -94,4 +93,4 @@ class NPMWatcher(Watcher):
                 ),
             )
 
-        return ReleaseInfo(tag=latest_version, assets=assets)
+        return ReleaseInfo(tag=latest_version, assets=assets, source_url=self.get_source_url(package))

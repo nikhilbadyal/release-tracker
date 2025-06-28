@@ -3,110 +3,125 @@ import requests
 from watcher.base import ReleaseAsset, ReleaseInfo, Watcher
 
 
-class WordPressWatcher(Watcher):
+class WordPressPluginWatcher(Watcher):
     """
     Watcher for WordPress plugins from the official repository.
 
     Repo format: "plugin-slug" (e.g., "akismet", "contact-form-7")
     """
 
-    def __init__(self, api_url: str = "https://api.wordpress.org/plugins/info/1.2") -> None:
+    def __init__(self, api_url: str = "https://api.wordpress.org/plugins/info/1.0") -> None:
         self.api_url = api_url
 
-    def fetch_latest_release(self, plugin_slug: str) -> ReleaseInfo:
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the WordPress plugin URL."""
+        return f"https://wordpress.org/plugins/{repo_id}/"
+
+    def fetch_latest_release(self, plugin: str) -> ReleaseInfo:
         """
         Fetch the latest version from WordPress Plugin Directory.
 
         Args:
-            plugin_slug: WordPress plugin slug (e.g., "akismet")
+            plugin: WordPress plugin slug (e.g., "akismet")
         """
-        # WordPress API parameters
         params = {
             "action": "plugin_information",
-            "request[slug]": plugin_slug,
-            "request[fields][versions]": "1",
-            "request[fields][download_link]": "1",
-            "request[fields][homepage]": "1",
-            "request[fields][tags]": "1",
+            "slug": plugin,
+            "fields": {
+                "description": False,
+                "installation": False,
+                "faq": False,
+                "screenshots": False,
+                "changelog": False,
+                "reviews": False,
+                "sections": False,
+                "tags": False,
+                "versions": True,
+                "donate_link": False,
+                "banners": False,
+                "icons": False,
+                "active_installs": False,
+                "short_description": False,
+            },
         }
 
         try:
             response = requests.get(self.api_url, params=params, timeout=10)
             response.raise_for_status()
-            plugin_data = response.json()
+            data = response.json()
         except requests.RequestException as e:
-            msg = f"Failed to fetch WordPress plugin {plugin_slug}: {e}"
+            msg = f"Failed to fetch WordPress plugin data for {plugin}: {e}"
             raise ValueError(msg) from e
 
-        # Check if plugin exists
-        if "error" in plugin_data:
-            msg = f"WordPress plugin {plugin_slug} not found: {plugin_data.get('error', 'Unknown error')}"
+        if "error" in data:
+            msg = f"WordPress plugin '{plugin}' not found"
             raise ValueError(msg)
 
-        # Extract plugin information
-        latest_version = plugin_data.get("version")
-        if not latest_version:
-            msg = f"No version information found for WordPress plugin {plugin_slug}"
+        version = data.get("version")
+        if not version:
+            msg = f"No version information found for WordPress plugin {plugin}"
             raise ValueError(msg)
 
-        plugin_data.get("name", plugin_slug)
-        download_link = plugin_data.get("download_link", "")
-        homepage = plugin_data.get("homepage", "")
-
-        # Create assets
+        # WordPress plugins typically have a download link
+        download_link = data.get("download_link", "")
         assets = []
-
-        # Main plugin download
         if download_link:
             assets.append(
                 ReleaseAsset(
-                    name=f"{plugin_slug}.{latest_version}.zip",
+                    name=f"{plugin}-{version}.zip",
                     download_url=download_link,
                     api_url=download_link,
                 ),
             )
 
-        # Plugin page on WordPress.org
-        plugin_page_url = f"https://wordpress.org/plugins/{plugin_slug}/"
-        assets.append(
-            ReleaseAsset(
-                name="WordPress Plugin Page",
-                download_url=plugin_page_url,
-                api_url=plugin_page_url,
-            ),
+        return ReleaseInfo(tag=version, assets=assets, source_url=self.get_source_url(plugin))
+
+
+class WordPressThemeWatcher(Watcher):
+    """
+    Watcher for WordPress themes from the official repository.
+
+    Repo format: "theme-slug" (e.g., "twentytwentyfour", "astra")
+    """
+
+    def __init__(self, api_url: str = "https://api.wordpress.org/themes/info/1.2/") -> None:
+        self.api_url = api_url
+
+    def get_source_url(self, theme_slug: str) -> str:
+        """Generate the WordPress theme URL."""
+        return f"https://wordpress.org/themes/{theme_slug}/"
+
+    def fetch_latest_release(self, theme_slug: str) -> ReleaseInfo:
+        """
+        Fetch the latest version from WordPress Theme Directory.
+
+        Args:
+            theme_slug: WordPress theme slug (e.g., "twentytwentyfour")
+        """
+        params = {
+            "action": "theme_information",
+            "request[slug]": theme_slug,
+        }
+
+        try:
+            response = requests.get(self.api_url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+        except requests.RequestException as e:
+            msg = f"Failed to fetch WordPress theme data for {theme_slug}: {e}"
+            raise ValueError(msg) from e
+
+        version = data.get("version")
+        download_link = data.get("download_link")
+
+        if not version or not download_link:
+            msg = f"Theme data for {theme_slug} missing version or download_link"
+            raise ValueError(msg)
+
+        asset = ReleaseAsset(
+            name=f"{theme_slug}-{version}.zip",
+            download_url=download_link,
+            api_url=download_link,
         )
 
-        # Homepage if different from plugin page
-        if homepage and homepage != plugin_page_url:
-            assets.append(
-                ReleaseAsset(
-                    name="Plugin Homepage",
-                    download_url=homepage,
-                    api_url=homepage,
-                ),
-            )
-
-        # Development version if available
-        svn_url = f"https://plugins.svn.wordpress.org/{plugin_slug}/trunk/"
-        assets.append(
-            ReleaseAsset(
-                name="Development Version (SVN)",
-                download_url=svn_url,
-                api_url=svn_url,
-            ),
-        )
-
-        # Historical versions if available
-        versions = plugin_data.get("versions", {})
-        if isinstance(versions, dict) and len(versions) > 1:
-            # Add link to all versions
-            versions_url = f"https://wordpress.org/plugins/{plugin_slug}/advanced/"
-            assets.append(
-                ReleaseAsset(
-                    name="All Versions",
-                    download_url=versions_url,
-                    api_url=versions_url,
-                ),
-            )
-
-        return ReleaseInfo(tag=latest_version, assets=assets)
+        return ReleaseInfo(tag=version, assets=[asset], source_url=self.get_source_url(theme_slug))

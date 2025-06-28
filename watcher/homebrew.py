@@ -13,6 +13,13 @@ class HomebrewWatcher(Watcher):
     def __init__(self, api_url: str = "https://formulae.brew.sh/api") -> None:
         self.api_url = api_url.rstrip("/")
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the Homebrew formula or cask URL."""
+        if repo_id.startswith("homebrew/cask/"):
+            cask_name = repo_id.replace("homebrew/cask/", "")
+            return f"https://formulae.brew.sh/cask/{cask_name}"
+        return f"https://formulae.brew.sh/formula/{repo_id}"
+
     def fetch_latest_release(self, formula: str) -> ReleaseInfo:
         """
         Fetch the latest version from Homebrew formulae API.
@@ -20,10 +27,50 @@ class HomebrewWatcher(Watcher):
         Args:
             formula: Homebrew formula name (e.g., "git" or "homebrew/cask/docker")
         """
-        # Determine if it's a cask or formula
-        if "/cask/" in formula or formula.startswith("homebrew/cask/"):
-            return self._fetch_cask_release(formula)
-        return self._fetch_formula_release(formula)
+        # Determine if this is a cask or formula
+        is_cask = formula.startswith("homebrew/cask/")
+        if is_cask:
+            formula_name = formula.replace("homebrew/cask/", "")
+            endpoint = f"{self.api_url}/cask/{formula_name}.json"
+        else:
+            endpoint = f"{self.api_url}/formula/{formula}.json"
+
+        try:
+            response = requests.get(endpoint, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+        except requests.RequestException as e:
+            msg = f"Failed to fetch Homebrew data for {formula}: {e}"
+            raise ValueError(msg) from e
+
+        if is_cask:
+            # Cask data structure
+            version = data.get("version")
+            name = data.get("token", formula)
+            if not version:
+                msg = f"No version information found for Homebrew cask {formula}"
+                raise ValueError(msg)
+        else:
+            # Formula data structure
+            versions = data.get("versions", {})
+            version = versions.get("stable")
+            name = data.get("name", formula)
+            if not version:
+                msg = f"No stable version found for Homebrew formula {formula}"
+                raise ValueError(msg)
+
+        # Homebrew doesn't provide direct download links via API
+        # We'll create a placeholder asset with installation command
+        install_command = f"brew install {formula}" if not is_cask else f"brew install --cask {formula_name}"
+        assets = [
+            ReleaseAsset(
+                name=f"{name}-{version}",
+                download_url=install_command,
+                api_url=endpoint,
+            ),
+        ]
+
+        return ReleaseInfo(tag=version, assets=assets, source_url=self.get_source_url(formula))
 
     def _fetch_formula_release(self, formula_name: str) -> ReleaseInfo:
         """Fetch release info for a Homebrew formula."""

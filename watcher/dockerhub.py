@@ -16,6 +16,12 @@ class DockerHubWatcher(Watcher):
         if token:
             self.headers["Authorization"] = f"Bearer {token}"
 
+    def get_source_url(self, repo_id: str) -> str:
+        """Generate the Docker Hub repository URL."""
+        if "/" not in repo_id:
+            repo_id = f"library/{repo_id}"
+        return f"https://hub.docker.com/r/{repo_id}"
+
     def fetch_latest_release(self, repo: str) -> ReleaseInfo:
         """
         Fetch the latest image tag from Docker Hub.
@@ -92,4 +98,4 @@ class DockerHubWatcher(Watcher):
             ),
         ]
 
-        return ReleaseInfo(tag=tag_name, assets=assets)
+        return ReleaseInfo(tag=tag_name, assets=assets, source_url=self.get_source_url(repo))
