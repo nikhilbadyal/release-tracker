@@ -334,7 +334,6 @@ def run_full_check() -> None:
             "dockerhub",
             "npm",
             "maven",
-            "wordpress",
             "homebrew",
             "apkmirror",
             "apkpure",

@@ -45,7 +45,6 @@ python main.py --repo package-name --watcher pypi
 | `dockerhub` | `namespace/image`             | `library/nginx`                                |
 | `npm`       | `package-name`                | `express`                                      |
 | `maven`     | `groupId:artifactId`          | `org.springframework.boot:spring-boot-starter` |
-| `wordpress` | `plugin-slug`                 | `akismet`                                      |
 | `homebrew`  | `formula-name` or `cask-name` | `homebrew/cask/docker`                         |
 | `apkmirror` | `package-name`                | `com.android.chrome`                           |
 | `apkpure`   | `package-name`                | `com.android.chrome`                           |

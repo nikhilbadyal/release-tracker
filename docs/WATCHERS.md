@@ -130,28 +130,6 @@ repos:
     watcher: maven
 ```
 
-### **🌐 WordPress**
-Track WordPress plugins from the official repository.
-
-**Type:** `wordpress`
-**Repo Format:** `plugin-slug`
-
-```yaml
-watchers:
-  wordpress:
-    type: wordpress
-    config:
-      api_url: "https://api.wordpress.org/plugins/info/1.2"  # Optional
-
-repos:
-  - name: "Akismet"
-    repo: "akismet"
-    watcher: wordpress
-  - name: "Contact Form 7"
-    repo: "contact-form-7"
-    watcher: wordpress
-```
-
 ### **🍺 Homebrew**
 Track macOS packages from Homebrew.
 
@@ -324,9 +302,6 @@ notifiers:
 #### **Maven Central**
 - `base_url`: Custom Maven search URL (default: https://search.maven.org)
 
-#### **WordPress**
-- `api_url`: WordPress API endpoint (default: https://api.wordpress.org/plugins/info/1.2)
-
 #### **Homebrew**
 - `api_url`: Homebrew API endpoint (default: https://formulae.brew.sh/api)
 
@@ -359,7 +334,7 @@ notifiers:
 With these 12 watchers, you can track releases across:
 - **Source Code**: GitHub, GitLab
 - **Containers**: Docker Hub
-- **Web Development**: NPM, WordPress
+- **Web Development**: NPM
 - **Enterprise Java**: Maven Central
 - **Python Ecosystem**: PyPI
 - **macOS Development**: Homebrew

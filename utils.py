@@ -19,7 +19,6 @@ from watcher.homebrew import HomebrewWatcher
 from watcher.maven import MavenCentralWatcher
 from watcher.npm import NPMWatcher
 from watcher.pypi import PyPIWatcher
-from watcher.wordpress import WordPressPluginWatcher, WordPressThemeWatcher
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -40,12 +39,6 @@ def build_watcher(watcher_type: str, config: dict[str, Any]) -> Watcher:
         "dockerhub": lambda: DockerHubWatcher(token=config.get("token")),
         "npm": lambda: NPMWatcher(registry_url=config.get("registry_url", "https://registry.npmjs.org")),
         "maven": lambda: MavenCentralWatcher(base_url=config.get("base_url", "https://search.maven.org")),
-        "wordpress-plugin": lambda: WordPressPluginWatcher(
-            api_url=config.get("api_url", "https://api.wordpress.org/plugins/info/1.0"),
-        ),
-        "wordpress-theme": lambda: WordPressThemeWatcher(
-            api_url=config.get("api_url", "https://api.wordpress.org/themes/info/1.2/"),
-        ),
         "homebrew": lambda: HomebrewWatcher(api_url=config.get("api_url", "https://formulae.brew.sh/api")),
     }
 

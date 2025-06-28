@@ -29,10 +29,6 @@ watchers:
     config:
       base_url: "https://search.maven.org"  # Optional
 
-  wordpress:
-    type: wordpress
-    config: {}
-
   homebrew:
     type: homebrew
     config: {}
@@ -71,12 +67,6 @@ repos:
   - name: "spring-boot"
     repo: "org.springframework.boot:spring-boot-starter"
     watcher: maven
-    config:
-      upload_assets: false
-
-  - name: "akismet-plugin"
-    repo: "akismet"
-    watcher: wordpress
     config:
       upload_assets: false
 
