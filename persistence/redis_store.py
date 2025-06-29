@@ -33,8 +33,9 @@ class RedisStore(PersistenceBackend):
         # Find the entry for this repo
         for member in members:
             if member.startswith(f"{repo}:"):
-                # Extract version from "repo:version" format
-                return member.split(":", 1)[1]  # type: ignore[no-any-return]
+                # Extract version by removing the repo prefix and colon
+                # This handles cases where repo keys contain colons (e.g., Maven artifacts)
+                return str(member[len(repo) + 1 :])  # +1 for the colon
 
         return None
 
@@ -126,7 +127,11 @@ class RedisStore(PersistenceBackend):
         repo_dict = {}
         for member in members:
             if ":" in member:
-                repo, version = member.split(":", 1)
+                # Split on the last colon to handle repo keys that contain colons
+                # This assumes versions don't contain colons (which is generally true)
+                last_colon_index = member.rfind(":")
+                repo = member[:last_colon_index]
+                version = member[last_colon_index + 1 :]
                 repo_dict[repo] = version
 
         return repo_dict
