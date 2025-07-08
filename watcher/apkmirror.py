@@ -43,6 +43,9 @@ class APKMirrorWatcher(Watcher):
             msg = f"App '{repo_id}' not found on APKMirror."
             raise ValueError(msg)
 
+        source_url = f"https://www.apkmirror.com/apk{app_info["app"]["link"]}"
+        app_name = app_info["app"]["name"]
+
         release = app_info.get("release")
         if not release:
             print(f"ℹ️ App '{repo_id}' has no release info.")
@@ -54,8 +57,8 @@ class APKMirrorWatcher(Watcher):
         assets: list[ReleaseAsset] = []
 
         for apk in apks:
-            apk_name = f"{repo_id}_{apk['version_code']}.apk"
+            apk_name = f"{app_name}-{apk['version_code']}-{apk["description"]}.apk"
             download_link = f"https://www.apkmirror.com{apk['link']}"
             assets.append(ReleaseAsset(name=apk_name, download_url=download_link, api_url=download_link))
 
-        return ReleaseInfo(tag=version, assets=assets, source_url=self.get_source_url(repo_id))
+        return ReleaseInfo(tag=version, assets=assets, source_url=source_url)
