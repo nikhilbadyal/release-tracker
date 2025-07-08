@@ -2,6 +2,8 @@ import requests
 
 from watcher.base import ReleaseAsset, ReleaseInfo, Watcher
 
+CASK_STRING = "homebrew/cask/"
+
 
 class HomebrewWatcher(Watcher):
     """
@@ -15,8 +17,8 @@ class HomebrewWatcher(Watcher):
 
     def get_source_url(self, repo_id: str) -> str:
         """Generate the Homebrew formula or cask URL."""
-        if repo_id.startswith("homebrew/cask/"):
-            cask_name = repo_id.replace("homebrew/cask/", "")
+        if repo_id.startswith(CASK_STRING):
+            cask_name = repo_id.replace(CASK_STRING, "")
             return f"https://formulae.brew.sh/cask/{cask_name}"
         return f"https://formulae.brew.sh/formula/{repo_id}"
 
@@ -28,9 +30,9 @@ class HomebrewWatcher(Watcher):
             formula: Homebrew formula name (e.g., "git" or "homebrew/cask/docker")
         """
         # Determine if this is a cask or formula
-        is_cask = formula.startswith("homebrew/cask/")
+        is_cask = formula.startswith(CASK_STRING)
         if is_cask:
-            formula_name = formula.replace("homebrew/cask/", "")
+            formula_name = formula.replace(CASK_STRING, "")
             endpoint = f"{self.api_url}/cask/{formula_name}.json"
         else:
             endpoint = f"{self.api_url}/formula/{formula}.json"
