@@ -66,7 +66,7 @@ python main.py
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - Redis (for persistence)
 - Docker (optional, for containerized deployment)
 
