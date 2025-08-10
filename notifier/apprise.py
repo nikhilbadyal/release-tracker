@@ -28,7 +28,7 @@ class AppriseNotifier(Notifier):
         str_attachments = [str(path) for path in attachments] if attachments else None
 
         if str_attachments:
-            for service in self.apprise.servers:  # type: ignore[attr-defined]
+            for service in self.apprise.servers:
                 if not service.attachment_support:
                     print(f"⚠️ Warning: {service.url()} does not support attachments. They will be ignored.")
 
@@ -37,7 +37,7 @@ class AppriseNotifier(Notifier):
                 title=title,
                 body=body,
                 body_format=self.message_format,
-                attach=str_attachments,  # type: ignore[arg-type]
+                attach=str_attachments,
             )
 
             log_output = logs.getvalue().strip()
@@ -45,4 +45,4 @@ class AppriseNotifier(Notifier):
                 print("📋 Apprise Logs:")
                 print(log_output)
 
-        return success
+        return success  # type: ignore[return-value]
