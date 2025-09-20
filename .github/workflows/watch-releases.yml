@@ -10,6 +10,11 @@ on:
         required: false
         default: false
         type: boolean
+      debug_session:
+        description: 'Run tmate debug session'
+        required: false
+        default: false
+        type: boolean
   push:
     branches:
       - main
@@ -32,7 +37,13 @@ jobs:
             echo 'FORCE_NOTIFY=1' >> $GITHUB_ENV
           fi
 
+      - name: Populate env file
+        run: printenv | sed 's/=/="/; s/$/"/' > .env.empty
+
+      - name: Setup tmate session
+        if: github.event.inputs.debug_session == 'true'
+        uses: mxschmitt/action-tmate@v3.22
+
       - name: Run Release Watcher
-        run: |
-          printenv | sed 's/=/="/; s/$/"/' > .env.empty
-          docker compose up --build --abort-on-container-exit
+        if: github.event.inputs.debug_session != 'true'
+        run: docker compose up --build --abort-on-container-exit
