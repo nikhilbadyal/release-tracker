@@ -32,7 +32,7 @@ class AppriseNotifier(Notifier):
                 if not service.attachment_support:
                     print(f"⚠️ Warning: {service.url()} does not support attachments. They will be ignored.")
 
-        with LogCapture(level=logging.WARNING) as logs:
+        with LogCapture(level=logging.WARNING) as logs:  # type: ignore[no-untyped-call]
             success = self.apprise.notify(
                 title=title,
                 body=body,
