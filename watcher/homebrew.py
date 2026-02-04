@@ -80,7 +80,7 @@ class HomebrewWatcher(Watcher):
         if "/" in formula_name:
             # For custom taps, we need to query differently
             # For now, let's handle the common case of homebrew/core formulas
-            formula_name = formula_name.split("/")[-1]
+            formula_name = formula_name.rsplit("/", maxsplit=1)[-1]
 
         formula_url = f"{self.api_url}/formula/{formula_name}.json"
 
@@ -155,7 +155,7 @@ class HomebrewWatcher(Watcher):
         """Fetch release info for a Homebrew cask."""
         # Handle tap-prefixed casks
         if "/" in cask_name:
-            cask_name = cask_name.split("/")[-1]
+            cask_name = cask_name.rsplit("/", maxsplit=1)[-1]
 
         cask_url = f"{self.api_url}/cask/{cask_name}.json"
 

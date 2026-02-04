@@ -140,7 +140,7 @@ class RepoProcessor:
             print(f"✅ Already up-to-date: {self.repo_id} @ {release.tag}")
             return False
         print(f"🆕 New release detected for {self.repo_id}")
-        print(f"📦 Old: {last_tag if last_tag else 'None'}")
+        print(f"📦 Old: {last_tag or 'None'}")
         print(f"📦 New: {release.tag}")
         return True
 
