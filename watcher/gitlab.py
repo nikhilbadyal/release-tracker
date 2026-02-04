@@ -38,7 +38,7 @@ class GitLabWatcher(Watcher):
 
         # Add source code assets (zip, tar.gz, tar.bz2, tar)
         for source in latest.get("assets", {}).get("sources", []):
-            name = f"{repo.split('/')[-1]}-{tag_name}.{source['format']}"
+            name = f"{repo.rsplit('/', maxsplit=1)[-1]}-{tag_name}.{source['format']}"
             download_url = source["url"]
             assets.append(ReleaseAsset(name=name, download_url=download_url, api_url=download_url))
 
