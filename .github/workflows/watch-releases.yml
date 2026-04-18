@@ -29,9 +29,9 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: oNaiPs/secrets-to-env-action@v1.5
+      - uses: oNaiPs/secrets-to-env-action@75f319b3c8c926ac2eabcca34daa6cf531daf32f # v1.8
         with:
           secrets: ${{ toJSON(secrets) }}
 
@@ -46,7 +46,7 @@ jobs:
 
       - name: Setup tmate session
         if: github.event.inputs.debug_session == 'true'
-        uses: mxschmitt/action-tmate@v3.22
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101 # v3.23
 
       - name: Run Release Watcher
         if: github.event.inputs.debug_session != 'true'
