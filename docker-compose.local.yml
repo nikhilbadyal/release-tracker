@@ -8,6 +8,6 @@ services:
     env_file:
       - .env.empty
   redis:
-    image: redis:7
+    image: redis:8
     ports:
       - "6379:6379"
